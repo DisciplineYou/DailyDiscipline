@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Daily Discipline</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --paper-100:#faf8f4;
+    --paper-200:#f2ede2;
+    --paper-300:#e8e0d0;
+    --line:#d8cdb8;
+    --ink:#1c1a17;
+    --ink-soft:#6b6255;
+    --bronze:#9c7a45;
+    --bronze-dim:#c4a877;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% -10%, #ffffff 0%, transparent 55%),
+      var(--paper-100);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:40px 20px 80px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+
+  header{text-align:center;margin-bottom:8px;}
+  .eyebrow{
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--bronze);margin-bottom:10px;font-weight:600;
+  }
+  h1{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;font-size:42px;line-height:1.05;margin:0 0 6px;
+    letter-spacing:.01em;
+    color:var(--ink);
+  }
+  .date{color:var(--ink-soft);font-size:14px;margin-bottom:28px;text-align:center;}
+
+  .streak{
+    display:flex;justify-content:center;gap:6px;margin-bottom:36px;
+  }
+  .streak-day{
+    width:26px;height:26px;border-radius:50%;
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;color:var(--ink-soft);
+    background:var(--paper-100);
+  }
+  .streak-day.done{background:var(--bronze);border-color:var(--bronze);color:#fff;font-weight:600;}
+
+  .item{
+    background:var(--paper-100);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:18px 20px;
+    margin-bottom:12px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+    cursor:pointer;
+    transition:border-color .2s ease, background .2s ease;
+    position:relative;
+    box-shadow:0 1px 2px rgba(28,26,23,0.04);
+  }
+  .item:hover{border-color:var(--bronze-dim);}
+  .item.checked{
+    background:var(--paper-200);
+    border-color:var(--bronze);
+  }
+
+  .box{
+    flex:0 0 22px;width:22px;height:22px;margin-top:2px;
+    border:1px solid var(--ink-soft);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .2s ease;
+  }
+  .item.checked .box{background:var(--bronze);border-color:var(--bronze);}
+  .box svg{width:12px;height:12px;opacity:0;transition:opacity .15s ease;}
+  .item.checked .box svg{opacity:1;}
+
+  .item-body{flex:1;}
+  .item-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:20px;font-weight:600;margin-bottom:3px;
+    transition:color .2s ease;
+    color:var(--ink);
+  }
+  .item.checked .item-title{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--bronze);}
+  .item-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;}
+  .item-num{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;color:var(--bronze);font-size:13px;
+    flex:0 0 20px;margin-top:3px;
+  }
+
+  .maxim{
+    margin-top:32px;
+    text-align:center;
+    padding:22px 24px;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .maxim p{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;font-size:18px;color:#000;margin:0 0 6px;
+    line-height:1.4;
+  }
+  .maxim span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--bronze);}
+
+  .footer-status{
+    text-align:center;margin-top:24px;font-size:13px;color:var(--ink-soft);
+    min-height:18px;
+  }
+  .reset-btn{
+    display:block;margin:20px auto 0;
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    font-size:12px;padding:8px 16px;border-radius:2px;cursor:pointer;
+    letter-spacing:.05em;text-transform:uppercase;
+  }
+  .reset-btn:hover{border-color:var(--bronze);color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Wisdom of the Stoics</div>
+    <h1>The Daily Discipline</h1>
+  </header>
+  <div class="date" id="dateLabel"></div>
+
+  <div class="streak" id="streakRow"></div>
+
+  <div id="items"></div>
+
+  <div class="maxim">
+    <p>"You have power over your mind — not outside events. Realize this, and you will find strength."</p>
+    <span>Marcus Aurelius</span>
+  </div>
+
+  <div class="footer-status" id="status"></div>
+  <button class="reset-btn" id="resetBtn">Reset today</button>
+</div>
+
+<script>
+const PRACTICES = [
+  {
+    id: 'morning',
+    title: 'Morning Silence',
+    desc: '20 phone-free minutes. Write: who you want to be today, one gratitude, one thing in your control to act on.'
+  },
+  {
+    id: 'selective',
+    title: 'Selective Silence Rule',
+    desc: 'Before speaking: is it true, necessary, kind? If not all three — hold it.'
+  },
+  {
+    id: 'discomfort',
+    title: 'Voluntary Discomfort',
+    desc: 'One deliberate hardship today or this week — cold shower, a fast, a screen-free stretch.'
+  },
+  {
+    id: 'audit',
+    title: 'Evening Audit',
+    desc: 'Where did I lose control of my reaction? Where did I speak when I should have stayed quiet? Where did I look outward instead of within?'
+  },
+  {
+    id: 'retreat',
+    title: 'Inner Retreat',
+    desc: 'Before reacting to anything stressful today, take three slow breaths and return to yourself.'
+  }
+];
+
+function todayKey(offsetDays = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0,10);
+}
+
+const dateLabel = document.getElementById('dateLabel');
+dateLabel.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+
+const itemsEl = document.getElementById('items');
+const statusEl = document.getElementById('status');
+const streakRow = document.getElementById('streakRow');
+
+let state = {};
+
+async function loadToday() {
+  try {
+    const raw = localStorage.getItem('checklist:' + todayKey());
+    state = raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    state = {};
+  }
+  render();
+  renderStreak();
+}
+
+async function saveToday() {
+  try {
+    localStorage.setItem('checklist:' + todayKey(), JSON.stringify(state));
+  } catch (e) {
+    console.error('Save failed', e);
+  }
+  renderStreak();
+}
+
+function render() {
+  itemsEl.innerHTML = '';
+  PRACTICES.forEach((p, i) => {
+    const checked = !!state[p.id];
+    const div = document.createElement('div');
+    div.className = 'item' + (checked ? ' checked' : '');
+    div.innerHTML = `
+      <div class="item-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#15181c" stroke-width="3"><path d="M4 12l6 6L20 6"/></svg></div>
+      <div class="item-body">
+        <div class="item-title">${p.title}</div>
+        <div class="item-desc">${p.desc}</div>
+      </div>
+    `;
+    div.addEventListener('click', () => {
+      state[p.id] = !state[p.id];
+      saveToday();
+      render();
+    });
+    itemsEl.appendChild(div);
+  });
+
+  const doneCount = PRACTICES.filter(p => state[p.id]).length;
+  if (doneCount === 0) statusEl.textContent = '';
+  else if (doneCount === PRACTICES.length) statusEl.textContent = 'All five practiced today. Quietly done.';
+  else statusEl.textContent = `${doneCount} of ${PRACTICES.length} today.`;
+}
+
+async function renderStreak() {
+  streakRow.innerHTML = '';
+  for (let i = 6; i >= 0; i--) {
+    const key = todayKey(-i);
+    let dayState = {};
+    try {
+      const raw = localStorage.getItem('checklist:' + key);
+      dayState = raw ? JSON.parse(raw) : {};
+    } catch (e) { dayState = {}; }
+    const doneCount = PRACTICES.filter(p => dayState[p.id]).length;
+    const isToday = i === 0;
+    const div = document.createElement('div');
+    div.className = 'streak-day' + (doneCount === PRACTICES.length ? ' done' : '');
+    div.textContent = new Date(key + 'T00:00:00').toLocaleDateString(undefined, { weekday:'narrow' });
+    div.title = `${key}: ${doneCount}/${PRACTICES.length}`;
+    if (isToday) div.style.borderColor = 'var(--bronze)';
+    streakRow.appendChild(div);
+  }
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state = {};
+  saveToday();
+  render();
+});
+
+loadToday();
+</script>
+</body>
+</html>
